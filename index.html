@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مكتب الأستاذ أكرم عبدو للأدوات الصحية</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <div class="bubbles">
+        <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+        <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+    </div>
+
+    <header class="main-header text-white text-center py-3 shadow-lg">
+        <div class="container">
+            <h1 class="fw-bold fs-2">مكتب الأستاذ أكرم عبدو للأدوات الصحية</h1>
+            <p class="mb-1 fs-5">للتواصل مع الإدارة: <strong class="text-warning">01210042609</strong></p>
+            <small class="developer-credit">تصميم وتطوير: المهندس سامح احمد محمد - <strong>01069524626</strong></small>
+        </div>
+    </header>
+
+    <div class="container-fluid my-4">
+        <div class="row">
+            <aside class="col-md-3 mb-4">
+                <div class="glass-card p-3">
+                    <h5 class="fw-bold border-bottom pb-2">الأقسام</h5>
+                    <div class="list-group list-group-flush" id="category-list">
+                        <button class="list-group-item list-group-item-action active" onclick="filterCategory('all')">جميع المنتجات</button>
+                        {% for cat in categories %}
+                        <button class="list-group-item list-group-item-action" onclick="filterCategory('{{ cat.id }}')">{{ cat.name }}</button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </aside>
+
+            <main class="col-md-9">
+                <div class="glass-card p-3">
+                    <h5 class="fw-bold mb-3">معرض المنتجات</h5>
+                    <div class="row g-3" id="products-grid">
+                        {% for prod in products %}
+                        <div class="col-md-4 product-card-item" data-cat="{{ prod.category_id }}">
+                            <div class="card h-100 border-0 shadow-sm glass-subcard">
+                                <img src="{{ prod.image_url }}" class="card-img-top product-img" alt="{{ prod.name }}">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title fw-bold text-dark">{{ prod.name }}</h6>
+                                    <p class="card-text text-primary fs-5 fw-bold mb-1">{{ prod.selling_price }} ج.م</p>
+                                    <small class="text-muted">المتاح: {{ prod.stock }} قطعة</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    {% if is_admin %}
+    <div class="container my-5">
+        <div class="glass-card p-4">
+            <h4 class="fw-bold text-warning mb-4">لوحة التحكم وإدارة النظام</h4>
+            <ul class="nav nav-tabs mb-4" id="adminTabs">
+                <li class="nav-item"><button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#invoices-tab">فاتورة مبيعات</button></li>
+                <li class="nav-item"><button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#inventory-tab">المخزون والأرباح</button></li>
+                <li class="nav-item"><button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#categories-tab">إدارة الأقسام</button></li>
+                <li class="nav-item"><button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#suppliers-tab">الموردين</button></li>
+                <li class="nav-item"><button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#expenses-tab">المصاريف</button></li>
+                <li class="nav-item"><button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#search-tab">بحث الفواتير</button></li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- فاتورة مبيعات -->
+                <div class="tab-pane fade show active" id="invoices-tab">
+                    <form id="invoice-form" class="row g-3">
+                        <div class="col-md-4"><input type="text" id="cust-name" class="form-control" placeholder="اسم العميل" required></div>
+                        <div class="col-md-4"><input type="text" id="cust-phone" class="form-control" placeholder="رقم الهاتف" required></div>
+                        <div class="col-md-4"><button type="submit" class="btn btn-success w-100 fw-bold">حفظ الفاتورة وتخصيم المخزون</button></div>
+                    </form>
+
+                    <div class="mt-4">
+                        <h6 class="fw-bold">قائمة الفواتير السابقة</h6>
+                        <table class="table table-striped table-hover mt-2 text-white">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="select-all" onclick="toggleSelectAll(this)"></th>
+                                    <th>رقم الفاتورة</th>
+                                    <th>اسم العميل</th>
+                                    <th>رقم الهاتف</th>
+                                    <th>الإجمالي</th>
+                                    <th>التاريخ</th>
+                                    <th>طباعة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for inv in invoices %}
+                                <tr>
+                                    <td><input type="checkbox" class="inv-checkbox" value="{{ inv.id }}"></td>
+                                    <td>#{{ inv.id }}</td>
+                                    <td>{{ inv.customer_name }}</td>
+                                    <td>{{ inv.customer_phone }}</td>
+                                    <td>{{ inv.total_amount }} ج.م</td>
+                                    <td>{{ inv.created_at.strftime('%Y-%m-%d') if inv.created_at else '' }}</td>
+                                    <td><button class="btn btn-sm btn-info text-white" onclick="printSingleInvoice('{{ inv.id }}')">طباعة</button></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <button class="btn btn-warning fw-bold mt-2" onclick="printSelectedInvoices()">طباعة الفواتير المحددة</button>
+                    </div>
+                </div>
+
+                <!-- المخزون والأرباح -->
+                <div class="tab-pane fade" id="inventory-tab">
+                    <div class="alert alert-info fw-bold">صافي الربح التقديري للمحل: {{ net_profit }} ج.م</div>
+                    <form action="/api/products" method="POST" enctype="multipart/form-data" class="row g-3">
+                        <div class="col-md-3"><input type="text" name="name" class="form-control" placeholder="اسم المنتج" required></div>
+                        <div class="col-md-2">
+                            <select name="category_id" class="form-select" required>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2"><input type="number" step="0.01" name="cost_price" class="form-control" placeholder="سعر الشراء" required></div>
+                        <div class="col-md-2"><input type="number" step="0.01" name="selling_price" class="form-control" placeholder="سعر البيع" required></div>
+                        <div class="col-md-1"><input type="number" name="stock" class="form-control" placeholder="الكمية" required></div>
+                        <div class="col-md-2"><input type="file" name="image" class="form-control"></div>
+                        <div class="col-12"><button type="submit" class="btn btn-primary fw-bold">إضافة للمخزون والواجهة</button></div>
+                    </form>
+                </div>
+
+                <!-- إدارة الأقسام -->
+                <div class="tab-pane fade" id="categories-tab">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <input type="text" id="new-cat-name" class="form-control mb-2" placeholder="اسم القسم الجديد">
+                            <button type="button" onclick="addCategory()" class="btn btn-success fw-bold">إضافة قسم جديد</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الموردين -->
+                <div class="tab-pane fade" id="suppliers-tab">
+                    <h6 class="fw-bold mb-3">قائمة الموردين</h6>
+                    <ul class="list-group">
+                        {% for sup in suppliers %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ sup.name }} - <span class="text-muted">{{ sup.phone }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- المصاريف -->
+                <div class="tab-pane fade" id="expenses-tab">
+                    <div class="alert alert-warning fw-bold">إجمالي المصاريف: {{ total_expenses if total_expenses is defined else 0 }} ج.م</div>
+                    <ul class="list-group">
+                        {% for exp in expenses %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ exp.title }} <span class="badge bg-danger rounded-pill">{{ exp.amount }} ج.م</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- بحث الفواتير -->
+                <div class="tab-pane fade" id="search-tab">
+                    <input type="text" id="search-input" class="form-control my-3" onkeyup="searchFunction()" placeholder="ابحث باسم العميل أو رقم الفاتورة أو رقم الهاتف...">
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="position-fixed bottom-0 end-0 m-4">
+        {% if not is_admin %}
+        <button class="btn btn-dark rounded-circle p-3 shadow-lg fs-5" data-bs-toggle="modal" data-bs-target="#loginModal">🔑</button>
+        {% else %}
+        <a href="/logout" class="btn btn-danger rounded-pill px-4 shadow-lg fw-bold">تسجيل خروج</a>
+        {% endif %}
+    </div>
+
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-card border-0 text-white">
+                <div class="modal-body text-center p-4">
+                    <h5 class="fw-bold mb-3">دخول صاحب المكتب</h5>
+                    <input type="text" id="admin-user" class="form-control my-2 text-center" placeholder="اسم المستخدم">
+                    <input type="password" id="admin-pass" class="form-control my-2 text-center" placeholder="كلمة المرور">
+                    <button onclick="submitLogin()" class="btn btn-warning w-100 fw-bold mt-2">تسجيل الدخول</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
