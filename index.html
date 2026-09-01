@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مكتب الأستاذ أكرم عبدو للأدوات الصحية</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body id="page-body">
+
+    <div class="bubbles">
+        <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+        <div class="bubble"></div>
+    </div>
+
+    <!-- الهيدر الرئيسي -->
+    <header class="main-header text-center py-3 shadow-lg">
+        <div class="container">
+            <h1 class="fw-bold fs-2 mb-1 text-white">مكتب الأستاذ أكرم عبدو للأدوات الصحية</h1>
+            <p class="mb-0 fs-5 text-light">للتواصل مع الإدارة: <strong class="text-warning">01210042609</strong></p>
+            <div class="mt-1"><small class="text-info">تصميم وتطوير: م/ سامح احمد (01069524626)</small></div>
+        </div>
+    </header>
+
+    <div class="container my-4">
+        <!-- عرض المنتجات للعميل والبحث -->
+        <div class="glass-card p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold text-dark">معرض المنتجات والأقسام</h4>
+                <div class="d-flex gap-2">
+                    <select id="category-filter" class="form-select form-select-sm" onchange="filterProducts()">
+                        <option value="all">كل الأقسام</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="row g-3" id="products-grid">
+                {% for prod in products %}
+                <div class="col-md-4 product-card-item" data-cat="{{ prod.category_id }}">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <img src="{{ prod.image_url }}" class="card-img-top product-img" alt="{{ prod.name }}">
+                        <div class="card-body text-center bg-white rounded-bottom">
+                            <h6 class="card-title fw-bold text-dark">{{ prod.name }}</h6>
+                            <p class="card-text text-primary fs-5 fw-bold mb-1">{{ prod.selling_price }} ج.م</p>
+                            <small class="text-muted">المتاح بالمخزن: {{ prod.stock }} قطعة</small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- لوحة التحكم الكاملة (تظهر فقط للمدير بعد تسجيل الدخول) -->
+        {% if is_admin %}
+        <div class="glass-card p-4 shadow-lg mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+                <h3 class="fw-bold text-primary">لوحة التحكم الإدارية الشاملة</h3>
+                <a href="/logout" class="btn btn-danger btn-sm fw-bold px-4">تسجيل خروج المدير</a>
+            </div>
+
+            <ul class="nav nav-tabs mb-4" id="adminTabs">
+                <li class="nav-item"><button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#invoices-tab">إصدار وفواتير مبيعات</button></li>
+                <li class="nav-item"><button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#archive-tab">أرشيف الفواتير والبحث</button></li>
+                <li class="nav-item"><button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#inventory-tab">إدارة المخزون والأرباح</button></li>
+                <li class="nav-item"><button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#categories-tab">إدارة الأقسام</button></li>
+                <li class="nav-item"><button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#suppliers-tab">الموردين والمصاريف</button></li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- قسم إصدار الفواتير -->
+                <div class="tab-pane fade show active" id="invoices-tab">
+                    <div class="card p-3 border-0 bg-light">
+                        <h5 class="fw-bold mb-3 text-dark">إنشاء فاتورة جديدة (بالقطعة والسعر الإجمالي)</h5>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4"><input type="text" id="inv-cust" class="form-control" placeholder="اسم العميل"></div>
+                            <div class="col-md-4"><input type="text" id="inv-phone" class="form-control" placeholder="رقم الهاتف"></div>
+                        </div>
+                        <div id="invoice-items-container">
+                            <div class="row g-2 mb-2 invoice-row">
+                                <div class="col-md-5">
+                                    <select class="form-select inv-product" onchange="updateRowTotal(this)">
+                                        <option value="">اختر المنتج</option>
+                                        {% for prod in products %}
+                                        <option value="{{ prod.id }}" data-price="{{ prod.selling_price }}">{{ prod.name }} (متاح: {{ prod.stock }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3"><input type="number" class="form-control inv-qty" value="1" min="1" placeholder="الكمية" oninput="updateRowTotal(this)"></div>
+                                <div class="col-md-3"><input type="text" class="form-control inv-row-total" readonly placeholder="الإجمالي"></div>
+                                <div class="col-md-1"><button type="button" class="btn btn-danger w-100" onclick="removeInvRow(this)">X</button></div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm mt-2 w-25" onclick="addInvoiceRow()">+ إضافة صنف آخر</button>
+                        <hr>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h4 class="fw-bold text-success">إجمالي الفاتورة العام: <span id="grand-total">0</span> ج.م</h4>
+                            <div class="gap-2 d-flex">
+                                <button type="button" class="btn btn-info fw-bold text-white" onclick="previewInvoice()">معاينة قبل الطباعة</button>
+                                <button type="button" class="btn btn-success fw-bold px-4" onclick="saveInvoice()">حفظ الفاتورة بالسيستم</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- أرشيف الفواتير والبحث -->
+                <div class="tab-pane fade" id="archive-tab">
+                    <div class="d-flex gap-3 mb-3">
+                        <button class="btn btn-outline-primary btn-sm" onclick="filterArchive('today')">فواتير اليوم</button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="filterArchive('yesterday')">فواتير أمس</button>
+                        <input type="date" id="archive-date-picker" class="form-control form-control-sm w-25" onchange="filterArchive('date', this.value)">
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle bg-white rounded">
+                            <thead>
+                                <tr>
+                                    <th>رقم الفاتورة</th>
+                                    <th>اسم العميل</th>
+                                    <th>التاريخ</th>
+                                    <th>الإجمالي</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="archive-table-body">
+                                <!-- يتم تحميل الفواتير هنا -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- إدارة المخزون والأرباح -->
+                <div class="tab-pane fade" id="inventory-tab">
+                    <div class="alert alert-info fw-bold">صافي الربح التقديري: {{ net_profit }} ج.م</div>
+                    <form action="/api/products" method="POST" enctype="multipart/form-data" class="row g-3 bg-light p-3 rounded">
+                        <h5 class="fw-bold text-dark">إضافة منتج جديد</h5>
+                        <div class="col-md-3"><input type="text" name="name" class="form-control" placeholder="اسم المنتج" required></div>
+                        <div class="col-md-2">
+                            <select name="category_id" class="form-select" required>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2"><input type="number" step="0.01" name="cost_price" class="form-control" placeholder="سعر الشراء" required></div>
+                        <div class="col-md-2"><input type="number" step="0.01" name="selling_price" class="form-control" placeholder="سعر البيع" required></div>
+                        <div class="col-md-1"><input type="number" name="stock" class="form-control" placeholder="الكمية" required></div>
+                        <div class="col-md-2"><input type="file" name="image" class="form-control"></div>
+                        <div class="col-12"><button type="submit" class="btn btn-primary fw-bold">حفظ المنتج في المخزن</button></div>
+                    </form>
+                </div>
+
+                <!-- إدارة الأقسام -->
+                <div class="tab-pane fade" id="categories-tab">
+                    <div class="row g-3 bg-light p-3 rounded">
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-dark">إضافة أو تعديل الأقسام</h5>
+                            <input type="text" id="new-cat-name" class="form-control mb-2" placeholder="اسم القسم الجديد">
+                            <button type="button" onclick="addNewCategory()" class="btn btn-success fw-bold">إضافة القسم</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الموردين والمصاريف -->
+                <div class="tab-pane fade" id="suppliers-tab">
+                    <div class="alert alert-warning fw-bold">إجمالي المصاريف المسجلة: {{ total_expenses }} ج.م</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- زر الدخول السريع للمدير -->
+    {% if not is_admin %}
+    <div class="position-fixed bottom-0 end-0 m-4" style="z-index: 1050;">
+        <button class="btn btn-dark rounded-circle p-3 shadow-lg fs-5 text-white" data-bs-toggle="modal" data-bs-target="#loginModal" style="width: 55px; height: 55px; border: 2px solid #00b4d8;">🔑</button>
+    </div>
+    {% endif %}
+
+    <!-- نافذة تسجيل الدخول -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-card border-0 text-dark">
+                <div class="modal-body text-center p-4">
+                    <h5 class="fw-bold mb-3 text-primary">تسجيل دخول صاحب المكتب</h5>
+                    <input type="text" id="admin-user" class="form-control my-2 text-center" placeholder="اسم المستخدم">
+                    <input type="password" id="admin-pass" class="form-control my-2 text-center" placeholder="كلمة المرور">
+                    <button onclick="submitLogin()" class="btn btn-primary w-100 fw-bold mt-2">دخول لوحة التحكم</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة معاينة الفاتورة قبل الطباعة -->
+    <div class="modal fade" id="previewModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content p-4 bg-white text-dark">
+                <h4 class="text-center fw-bold border-bottom pb-2">معاينة فاتورة مبيعات</h4>
+                <div id="preview-content" class="my-3"></div>
+                <div class="d-flex justify-content-between">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                    <button class="btn btn-primary" onclick="window.print()">طباعة الفاتورة</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function filterProducts() {
+            const catId = document.getElementById('category-filter').value;
+            document.querySelectorAll('.product-card-item').forEach(item => {
+                if(catId === 'all' || item.getAttribute('data-cat') === catId) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function updateRowTotal(element) {
+            const row = element.closest('.invoice-row');
+            const select = row.querySelector('.inv-product');
+            const qty = row.querySelector('.inv-qty').value;
+            const price = select.options[select.selectedIndex].getAttribute('data-price') || 0;
+            const total = price * qty;
+            row.querySelector('.inv-row-total').value = total;
+            calcGrandTotal();
+        }
+
+        function addInvoiceRow() {
+            const container = document.getElementById('invoice-items-container');
+            const firstRow = container.querySelector('.invoice-row');
+            const newRow = firstRow.cloneNode(true);
+            newRow.querySelector('.inv-qty').value = 1;
+            newRow.querySelector('.inv-row-total').value = '';
+            container.appendChild(newRow);
+        }
+
+        function removeInvRow(btn) {
+            if(document.querySelectorAll('.invoice-row').length > 1) {
+                btn.closest('.invoice-row').remove();
+                calcGrandTotal();
+            }
+        }
+
+        function calcGrandTotal() {
+            let sum = 0;
+            document.querySelectorAll('.inv-row-total').forEach(input => {
+                sum += parseFloat(input.value) || 0;
+            });
+            document.getElementById('grand-total').innerText = sum;
+        }
+
+        function previewInvoice() {
+            const cust = document.getElementById('inv-cust').value || 'عميل نقدي';
+            const phone = document.getElementById('inv-phone').value || '-';
+            let html = `<p><strong>العميل:</strong> ${cust} | <strong>الهاتف:</strong> ${phone}</p><hr><ul class='list-unstyled'>`;
+            document.querySelectorAll('.invoice-row').forEach(row => {
+                const prodName = row.querySelector('.inv-product').selectedOptions[0].text;
+                const qty = row.querySelector('.inv-qty').value;
+                const total = row.querySelector('.inv-row-total').value;
+                if(total) {
+                    html += `<li>${prodName} - الكمية: ${qty} - الإجمالي: ${total} ج.م</li>`;
+                }
+            });
+            html += `</ul><hr><h5 class='fw-bold text-success'>الإجمالي الكلي: ${document.getElementById('grand-total').innerText} ج.م</h5>`;
+            document.getElementById('preview-content').innerHTML = html;
+            new bootstrap.Modal(document.getElementById('previewModal')).show();
+        }
+
+        function submitLogin() {
+            const user = document.getElementById('admin-user').value;
+            const pass = document.getElementById('admin-pass').value;
+            fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`
+            }).then(res => res.json()).then(data => {
+                if(data.success) { location.reload(); }
+                else { alert(data.message); }
+            });
+        }
+
+        function addNewCategory() {
+            const name = document.getElementById('new-cat-name').value;
+            if(!name) return;
+            fetch('/api/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name })
+            }).then(res => res.json()).then(data => { if(data.success) { location.reload(); } });
+        }
+    </script>
+</body>
+</html>
