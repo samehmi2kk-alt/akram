@@ -1,0 +1,91 @@
+body {
+    background: linear-gradient(135deg, #001e3d 0%, #004b23 0%, #0077b6 50%, #03045e 100%);
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #ffffff;
+    position: relative;
+    overflow-x: hidden;
+    background-attachment: fixed;
+}
+
+.bubbles {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.bubble {
+    position: absolute;
+    bottom: -100px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    opacity: 0.6;
+    animation: rise 10s infinite ease-in-out;
+}
+
+.bubble:nth-child(1) { width: 40px; height: 40px; left: 10%; animation-duration: 8s; }
+.bubble:nth-child(2) { width: 25px; height: 25px; left: 25%; animation-duration: 6s; }
+.bubble:nth-child(3) { width: 50px; height: 50px; left: 45%; animation-duration: 11s; }
+.bubble:nth-child(4) { width: 70px; height: 70px; left: 70%; animation-duration: 9s; }
+.bubble:nth-child(5) { width: 35px; height: 35px; left: 85%; animation-duration: 7s; }
+
+@keyframes rise {
+    0% { transform: translateY(0) scale(1); opacity: 0.6; }
+    100% { transform: translateY(-1000px) scale(1.2); opacity: 0; }
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+.glass-subcard {
+    background: #ffffff;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.main-header {
+    background: rgba(3, 4, 94, 0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 3px solid #00b4d8;
+}
+
+/* تنسيق القائمة الجانبية ووضوح أسماء الأقسام تماماً */
+.sidebar-categories .list-group-item {
+    background: rgba(0, 0, 0, 0.3);
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.sidebar-categories .list-group-item:hover,
+.sidebar-categories .list-group-item.active {
+    background: #00b4d8 !important;
+    color: #ffffff !important;
+    border-color: #00b4d8;
+}
+
+.product-img {
+    height: 180px;
+    object-fit: cover;
+}
+
+.developer-credit {
+    color: #caf0f8;
+}
+
+@media print {
+    body * { visibility: hidden; }
+    .printable-invoice, .printable-invoice * { visibility: visible; }
+    .printable-invoice {
+        position: absolute; left: 0; top: 0; width: 100%;
+        color: #000; background: #fff; padding: 25px;
+        border: 4px double #000;
+    }
+}
